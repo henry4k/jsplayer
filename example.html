@@ -5,9 +5,25 @@
         <link rel="stylesheet" type="text/css" href="jsplayer.css">
         <script type="application/javascript" src="jsplayer.js"></script>
         <script type="application/javascript">
+            function Example() {
+                this.text = 'example text';
+            }
+
+            Example.prototype = {
+
+                load: function( player ) {
+                    // load needed resources
+                },
+
+                update: function( element, timeDelta ) {
+                    // simulate and draw stuff here
+                    console.log(timeDelta);
+                }
+            };
+
             window.onload = function() {
-                var myPlayer = new jsplayer.JSPlayer();
-                document.body.appendChild(myPlayer.element)
+                var myPlayer = new jsplayer.JSPlayer(new Example());
+                document.body.appendChild(myPlayer.element);
             }
         </script>
     </head>

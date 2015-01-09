@@ -1,22 +1,50 @@
 'use strict';
 
 var jsplayer = (function() {
+
     /**
+     * @param {Object} playable
+     * @return {Boolean}
+     */
+    function isPlayable( playable ) {
+        return playable.load   instanceof Function &&
+               playable.update instanceof Function;
+    }
+
+    /**
+     * @param {Object} playable
      * @constructor
      */
-    function JSPlayer() {
+    function JSPlayer( playable ) {
+        if(!isPlayable(playable))
+            throw new Error('Passed object is not playable.');
+        this.playable = playable;
+
         var element = document.createElement('div');
         element.className = 'jsplayer';
-
         this.element = element;
+
+        this._update = this._update.bind(this);
 
         this._createModalOverlay();
         this._showModalButton('PLAY', function() {
-            console.log('Nope, not doing it.');
+            this.playable.load.call(this.playable, this.element);
+            this.startUpdateLoop();
         });
     }
 
     JSPlayer.prototype = {
+
+        /**
+         * @type {Object}
+         */
+        playable: null,
+
+        /**
+         * @type {DOMHighResTimeStamp}
+         */
+        lastUpdate: null,
+
         /**
          * Player root element.
          * @type {HTMLElement}
@@ -70,6 +98,9 @@ var jsplayer = (function() {
          */
         _showModalButton: function( content, callback ) {
 
+            if(!callback instanceof Function)
+                throw new Error('Callback must be a function.');
+
             var button = document.createElement('a');
             button.className = 'button';
             button.innerHTML = content;
@@ -83,6 +114,29 @@ var jsplayer = (function() {
 
             this._setModalOverlayContent(button);
             this._showModalOverlay(true);
+        },
+
+        startUpdateLoop: function() {
+            window.requestAnimationFrame(this._update, this.element);
+            this.lastUpdate = performance.now();
+        },
+
+        stopUpdateLoop: function() {
+            window.cancelRequestAnimationFrame(this._update);
+        },
+
+        /**
+         * @param {DOMHighResTimeStamp} timestamp
+         * @private
+         */
+        _update: function( timestamp ) {
+            window.requestAnimationFrame(this._update, this.element);
+
+            var timeDelta = (timestamp - this.lastUpdate) / 1000.0;
+            // Timestamps are doubles in milliseconds, but i want seconds.
+
+            this.playable.update.call(this.playable, this.element, timeDelta);
+            this.lastUpdate = timestamp;
         }
     };
 
