@@ -6,24 +6,36 @@
         <script type="application/javascript" src="jsplayer.js"></script>
         <script type="application/javascript">
             function Example() {
-                this.text = 'example text';
+                this.x = 0;
             }
 
             Example.prototype = {
 
                 load: function( player ) {
                     // load needed resources
+
+                    console.log('huii');
+                    this.ctx = player.canvas.getContext('2d');
                 },
 
-                update: function( element, timeDelta ) {
+                update: function( player, timeDelta ) {
+
+                    var x = this.x;
+                    x += timeDelta*30;
+                    this.x = x;
+
+                    var ctx = this.ctx;
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(x, x, 3, 3);
+
                     // simulate and draw stuff here
-                    console.log(timeDelta);
+                    //console.log(timeDelta);
                 }
             };
 
             window.onload = function() {
                 var myPlayer = new jsplayer.JSPlayer(new Example());
-                document.body.appendChild(myPlayer.element);
+                document.body.appendChild(myPlayer.rootElement);
             }
         </script>
     </head>

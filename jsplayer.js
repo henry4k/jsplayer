@@ -11,6 +11,22 @@ var jsplayer = (function() {
                playable.update instanceof Function;
     }
 
+    var pixelRatio = (function () {
+        var context = document.createElement('canvas').getContext('2d');
+        var devicePixelRatio = window.devicePixelRatio || 1;
+        var backingStorePixelRatio = context.backingStorePixelRatio || 1;
+        return devicePixelRatio / backingStorePixelRatio;
+    })();
+
+    /**
+     * @param {HTMLCanvasElement} canvas
+     */
+    function updateCanvasSize( canvas ) {
+        var rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * pixelRatio;
+        canvas.height = rect.height * pixelRatio;
+    }
+
     /**
      * @param {Object} playable
      * @constructor
@@ -20,15 +36,20 @@ var jsplayer = (function() {
             throw new Error('Passed object is not playable.');
         this.playable = playable;
 
-        var element = document.createElement('div');
-        element.className = 'jsplayer';
-        this.element = element;
+        var rootElement = document.createElement('div');
+        rootElement.className = 'jsplayer';
+        this.rootElement = rootElement;
+
+        var canvas = document.createElement('canvas');
+        rootElement.appendChild(canvas);
+        this.canvas = canvas;
 
         this._update = this._update.bind(this);
 
         this._createModalOverlay();
-        this._showModalButton('PLAY', function() {
-            this.playable.load.call(this.playable, this.element);
+        this._showModalButton('▶', function() {
+            updateCanvasSize(canvas);
+            this.playable.load.call(this.playable, this);
             this.startUpdateLoop();
         });
     }
@@ -49,7 +70,12 @@ var jsplayer = (function() {
          * Player root element.
          * @type {HTMLElement}
          */
-        element: null,
+        rootElement: null,
+
+        /**
+         * @type {HTMLCanvasElement}
+         */
+        canvas: null,
 
         /**
          * @type {HTMLElement}
@@ -63,7 +89,7 @@ var jsplayer = (function() {
 
             var overlay = document.createElement('div');
             overlay.className = 'modaloverlay';
-            this.element.appendChild(overlay);
+            this.rootElement.appendChild(overlay);
             this.modalOverlay = overlay;
 
             this._showModalOverlay(false);
@@ -117,7 +143,7 @@ var jsplayer = (function() {
         },
 
         startUpdateLoop: function() {
-            window.requestAnimationFrame(this._update, this.element);
+            window.requestAnimationFrame(this._update, this.canvas);
             this.lastUpdate = performance.now();
         },
 
@@ -130,12 +156,12 @@ var jsplayer = (function() {
          * @private
          */
         _update: function( timestamp ) {
-            window.requestAnimationFrame(this._update, this.element);
+            window.requestAnimationFrame(this._update, this.canvas);
 
             var timeDelta = (timestamp - this.lastUpdate) / 1000.0;
             // Timestamps are doubles in milliseconds, but i want seconds.
 
-            this.playable.update.call(this.playable, this.element, timeDelta);
+            this.playable.update.call(this.playable, this, timeDelta);
             this.lastUpdate = timestamp;
         }
     };
