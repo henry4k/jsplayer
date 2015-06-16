@@ -23,7 +23,7 @@ var jsplayer = (function() {
      */
     function updateCanvasSize( canvas ) {
         var rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * pixelRatio;
+        canvas.width  = rect.width  * pixelRatio;
         canvas.height = rect.height * pixelRatio;
     }
 
@@ -45,6 +45,13 @@ var jsplayer = (function() {
         this.canvas = canvas;
 
         this._update = this._update.bind(this);
+
+        var toolbar = document.createElement('div');
+        toolbar.className = 'toolbar';
+        rootElement.appendChild(toolbar);
+        this.toolbar = toolbar;
+
+        toolbar.innerHTML = '<div>▶</div><div>▶</div>';
 
         this._createModalOverlay();
         this._showModalButton('▶', function() {
@@ -81,6 +88,11 @@ var jsplayer = (function() {
          * @type {HTMLElement}
          */
         modalOverlay: null,
+
+        /**
+         * @type {HTMLElement}
+         */
+        toolbar: null,
 
         /**
          * @private
